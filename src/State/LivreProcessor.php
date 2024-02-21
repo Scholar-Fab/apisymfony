@@ -2,6 +2,7 @@
 
 namespace App\State;
 
+use App\Entity\Tag;
 use ApiPlatform\Metadata\Operation;
 use Doctrine\ORM\EntityManagerInterface;
 use ApiPlatform\State\ProcessorInterface;
@@ -20,6 +21,17 @@ class LivreProcessor implements ProcessorInterface
     public function process(mixed $data, Operation $operation, array $uriVariables = [], array $context = []): void
     {
         $data->setSlug($this->slugger->slug(strtolower($data->getTitre())));
+        $tagRepository = $this->entityManager->getRepository(Tag::class);
+        foreach($data->getListeTags() as $tag){
+            $t = $tagRepository->findOneByLabel($tag->getLabel());
+            if($t !== null) {
+                $data->removeListeTag($tag);
+                $data->addListeTag($t);
+            }
+            else{
+                $this->entityManager->persist($tag);
+            }
+        }
         $this->entityManager->persist($data);
         $this->entityManager->flush();
     }

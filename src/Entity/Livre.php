@@ -6,6 +6,8 @@ use ApiPlatform\Metadata\Get;
 use ApiPlatform\Metadata\Put;
 use App\State\LivreProcessor;
 use ApiPlatform\Metadata\Post;
+use Doctrine\Common\Collections\ArrayCollection;
+use Doctrine\Common\Collections\Collection;
 use Doctrine\DBAL\Types\Types;
 use ApiPlatform\Metadata\Patch;
 use ApiPlatform\Metadata\Delete;
@@ -59,8 +61,18 @@ class Livre
     #[Groups(['livre:read'])]
     private ?\DateTimeInterface $datePublication = null;
 
+    #[ORM\OneToMany(targetEntity: Commentaire::class, mappedBy: 'livre', orphanRemoval: true)]
+    #[Groups(['livre:read'])]
+    private Collection $commentaires;
+
+    #[ORM\ManyToMany(targetEntity: Tag::class, inversedBy: 'listeLivres', cascade: ['persist'])]
+    #[Groups(['livre:read', 'livre:write'])]
+    private Collection $listeTags;
+
     public function __construct(){
         $this->setDatePublication(new \DateTime());
+        $this->commentaires = new ArrayCollection();
+        $this->listeTags = new ArrayCollection();
     }
 
     public function getId(): ?int
@@ -136,6 +148,60 @@ class Livre
     public function setDatePublication(?\DateTimeInterface $datePublication): static
     {
         $this->datePublication = $datePublication;
+
+        return $this;
+    }
+
+    /**
+     * @return Collection<int, Commentaire>
+     */
+    public function getCommentaires(): Collection
+    {
+        return $this->commentaires;
+    }
+
+    public function addCommentaire(Commentaire $commentaire): static
+    {
+        if (!$this->commentaires->contains($commentaire)) {
+            $this->commentaires->add($commentaire);
+            $commentaire->setLivre($this);
+        }
+
+        return $this;
+    }
+
+    public function removeCommentaire(Commentaire $commentaire): static
+    {
+        if ($this->commentaires->removeElement($commentaire)) {
+            // set the owning side to null (unless already changed)
+            if ($commentaire->getLivre() === $this) {
+                $commentaire->setLivre(null);
+            }
+        }
+
+        return $this;
+    }
+
+    /**
+     * @return Collection<int, Tag>
+     */
+    public function getListeTags(): Collection
+    {
+        return $this->listeTags;
+    }
+
+    public function addListeTag(Tag $listeTag): static
+    {
+        if (!$this->listeTags->contains($listeTag)) {
+            $this->listeTags->add($listeTag);
+        }
+
+        return $this;
+    }
+
+    public function removeListeTag(Tag $listeTag): static
+    {
+        $this->listeTags->removeElement($listeTag);
 
         return $this;
     }

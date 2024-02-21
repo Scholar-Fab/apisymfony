@@ -14,7 +14,7 @@ use Doctrine\Persistence\ManagerRegistry;
  * @method Livre[]    findAll()
  * @method Livre[]    findBy(array $criteria, array $orderBy = null, $limit = null, $offset = null)
  */
-class LivreRepository extends ServiceEntityRepository
+class LivreRepository extends \Doctrine\Bundle\DoctrineBundle\Repository\ServiceEntityRepository
 {
     public function __construct(ManagerRegistry $registry)
     {
